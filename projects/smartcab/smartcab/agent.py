@@ -46,8 +46,12 @@ class LearningAgent(Agent):
         	self.alpha = 0.0
     	else:
              self.trial += 1
-    		#self.epsilon -= self.decay
-             self.epsilon = 1.0 / self.trial ** 2
+             # initial learning trial
+             #self.epsilon -= self.decay
+             #optimized trail
+             #self.epsilon = 1.0 / self.trial ** 2
+             self.epsilon = pow(0.99, self.trial)
+             #self.epsilon = math.cos(0.9 * self.trial)
 
 
         return None
@@ -60,7 +64,7 @@ class LearningAgent(Agent):
         # Collect data about the environment
         waypoint = self.planner.next_waypoint() # The next waypoint 
         inputs = self.env.sense(self)           # Visual input - intersection light and traffic
-        deadline = self.env.get_deadline(self)  # Remaining deadline
+        #deadline = self.env.get_deadline(self)  # Remaining deadline
 
         ########### 
         ## TO DO ##
@@ -70,10 +74,11 @@ class LearningAgent(Agent):
         #   If it is not, create a dictionary in the Q-table for the current 'state'
         #   For each action, set the Q-value for the state-action pair to 0
         
+        
+        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
+        
         # Looks like update() calls CreateQ to upddate the dictionary so I'm not sure
         # why the TODO ask for it here as well.  I orignally added it then took it out.
-        state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
-    
         #if self.learning:
         #	self.createQ(self,state)
         	
@@ -136,14 +141,18 @@ class LearningAgent(Agent):
         elif random.random() < self.epsilon:
             action = random.choice(self.valid_actions)
         else:
-            print state
+            
             maxQ = self.get_maxQ(state)
-            #action = self.Q[state][name for name, Qval in self.Q[state].iteritems() if Qval == maxQ]
-            #action = list(self.Q[state].keys())[list(self.Q[state].values().index(maxQ))]
-            print self.Q[state]
+            
+            # Find the actions that match maxQ, if multiple then chose random one
+            # from the set
+            actionset = []
+            
             for name in self.Q[state]:
                 if self.Q[state][name] == maxQ:
-                    action = name
+                    actionset.append(name)
+                    
+            action = random.choice(actionset)
 
 	return action
 
@@ -158,7 +167,8 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        self.Q[state][action] += self.alpha * (reward - self.Q[state][action])
+        if self.learning:
+            self.Q[state][action] = (1 - self.alpha ) * self.Q[state][action] + self.alpha * (reward - self.Q[state][action])
 
     
         return
@@ -196,7 +206,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent,learning = True, epsilon = 1, alpha = 0.5)
+    agent = env.create_agent(LearningAgent,learning = True, epsilon = 1, alpha = 0.25)
     
     ##############
     # Follow the driving agent
@@ -216,7 +226,8 @@ def run():
     #   optimized    - set to True to change the default log file name
     # default
     #sim = Simulator(env)
-    # run 1 - random action
+    #sim = Simulator(env, update_delay=0.01, log_metrics=True)
+	
     sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized = True)
 	    
     ##############
@@ -225,8 +236,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
     #sim.run()
-	# run 1 - random action
-    sim.run(n_test = 20, tolerance = 0.05)
+    sim.run(n_test = 10, tolerance = 0.05)
 	
 
 if __name__ == '__main__':
