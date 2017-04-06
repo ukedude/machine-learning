@@ -47,11 +47,10 @@ class LearningAgent(Agent):
     	else:
              self.trial += 1
              # initial learning trial
-             #self.epsilon -= self.decay
+             self.epsilon -= self.decay
              #optimized trail
-             #self.epsilon = 1.0 / self.trial ** 2
-             self.epsilon = pow(0.99, self.trial)
-             #self.epsilon = math.cos(0.9 * self.trial)
+             #self.epsilon = pow(0.99, self.trial)
+             
 
 
         return None
@@ -206,6 +205,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
+    #agent = env.create_agent(LearningAgent,learning = True, epsilon = 1, alpha = 0.5)
     agent = env.create_agent(LearningAgent,learning = True, epsilon = 1, alpha = 0.25)
     
     ##############
