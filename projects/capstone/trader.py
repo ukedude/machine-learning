@@ -348,14 +348,15 @@ def simulate(trader,stocks,stockdata, start_date, end_date, mode = 'training',ve
                 #current_return = inputs['Daily_Return']
                 current_return = inputs['MA(20)_Return']
             priorinputs = inputs
-            
-        th = trader.portfolio.transaction_history[trader.portfolio.transaction_history['Symbol']==symbol]
-        if verbose:
-            print th
-        title = '{} - Stock Prices for {}'.format(mode,symbol)
-        plt_items = ['Adj_Close']
-        plt_items.extend(trader.features) #['Adj_Close','MA(20)']
-        vs.plot_data(traindf[plt_items],title=title, normalize=False,actions=th) 
+        
+        if mode == 'testing':
+            th = trader.portfolio.transaction_history[trader.portfolio.transaction_history['Symbol']==symbol]
+            if verbose:
+                print th
+            title = '{} - Stock Prices for {}'.format(mode,symbol)
+            plt_items = ['Adj_Close']
+            plt_items.extend(trader.features) #['Adj_Close','MA(20)']
+            vs.plot_data(traindf[plt_items],title=title, normalize=False,actions=th) 
         
     ending_value = trader.portfolio.value()
     print "Ending {} with portfolio value {:,.2f}".format(mode,ending_value)
