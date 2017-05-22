@@ -2,7 +2,7 @@
 """
 Utilities for reading and pre-processing
 """
-from yahoo_finance import Share
+#from yahoo_finance import Share
 
 import pandas as pd 
 
@@ -33,7 +33,8 @@ def fill_missing_values(df):
     df.fillna(method="bfill", inplace=True)
     
 def get_data(symbols, start_date,end_date, drop_na=True):
-    
+    from pandas_datareader import data as dreader   
+ 
     dates = pd.date_range(start_date, end_date)
     df = pd.DataFrame(index=dates)
 
@@ -41,18 +42,23 @@ def get_data(symbols, start_date,end_date, drop_na=True):
         symbols.insert(0, 'SPY')
 
     for symbol in symbols:
-        shr = Share(symbol)
-        df_temp =  pd.DataFrame(shr.get_historical(start_date, end_date))
-        df_temp.drop(['Close','Open','High','Low','Symbol','Volume'], inplace=True, axis=1)
+#        shr = Share(symbol)
+#        df_temp =  pd.DataFrame(shr.get_historical(start_date, end_date))
+        df_temp = dreader.DataReader(symbol,'yahoo',start_date,end_date)
+#        df_temp.drop(['Close','Open','High','Low','Symbol','Volume'], inplace=True, axis=1)
+        df_temp.drop(['Close','Open','High','Low','Volume'], inplace=True, axis=1)
         df_temp['Date'] = pd.to_datetime(df_temp['Date'])
         df_temp = df_temp.set_index(['Date'])
-        df_temp['Adj_Close'] = pd.to_numeric(df_temp['Adj_Close'])
-        df_temp = df_temp.rename(columns={'Adj_Close': symbol})
+#        df_temp = df_temp.rename(columns={'Adj_Close': symbol})
+        df_temp = df_temp.rename(columns={'Adj Close': symbol})
+        df_temp[symbol] = pd.to_numeric(df_temp[symbol])
         df = df.join(df_temp)
     if drop_na:
         df = df.dropna(subset=["SPY"])
         fill_missing_values(df)
     return df
+    
+
     
 def compute_features(df):
     
